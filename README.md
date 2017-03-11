@@ -4,7 +4,7 @@ Jio Music
 Simple music player application which you can use to play music using JioFi device
 All you need is an SD Card full of songs, you can insert the same into JioFi device and enable storage option with username and password
 
-After connecting to the Jio Device using your android smartphone, just login using the sdcard credentials and the app should be automatically pulling all those music files from the sdcard
+After connecting to the Jio Device using your android smartphone, just login using the sdcard credentials and the app should be automatically pulling all those music files from the sdcard. You can follow [these steps](http://www.bgr.in/news/how-to-use-reliance-jio-jiofi-2-portable-wi-fi-hotspot-as-a-wireless-pen-drive/) to configure the device for WiFi Direct
 
 Installation
 ===

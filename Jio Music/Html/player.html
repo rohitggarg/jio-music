@@ -7,7 +7,6 @@
       }
       .loader {
         position:absolute;
-        display: none;
         border: 3px solid #f3f3f3; /* Light grey */
         border-top: 3px solid #7090F0; /* Blue */
         border-radius: 50%;
@@ -15,6 +14,9 @@
         width: 3em;
         height: 3em;
         animation: spin 2s linear infinite;
+      }
+      .hide {
+        display: none;
       }
 
       @keyframes spin {
@@ -63,15 +65,19 @@
       function prevPage() {
         var page = parseInt($("#pagenum").text()) - 1;
         if (page > 0) {
-          changePage(page - 1);
+          changePage(page - 1, markCurrentPlaying);
         }
       }
       function nextPage() {
         var page = parseInt($("#pagenum").text()) - 1;
         var maxPageIndex = parseInt($('#total').val()) / 100.0;
         if (page < maxPageIndex - 1) {
-          changePage(page + 1);
+          changePage(page + 1, markCurrentPlaying);
         }
+      }
+      function markCurrentPlaying() {
+        var current = $("#ticker").text();
+        $("#list li:contains('"+current+"')").addClass("current");
       }
       function prev() {
         var prev = $('#list li.current').prev();
@@ -96,10 +102,11 @@
       }
 
       function changePage(curr_page, callback) {
-        $('.loader').show();
-        if(curr_page == (parseInt($("#pagenum").text()) - 1) ) {
+        var loading = $('.loader.hide').length == 0;
+        if(loading) {
           return;
         }
+        $('.loader').removeClass("hide");
         $("#pagenum").text(curr_page + 1);
         var headers = {"__RequestVerificationToken": $("#csrf_token").val()};
         $.ajax({
@@ -109,7 +116,6 @@
           datatype: "xml",
           data: { path:'/', page: curr_page, filter:'2' },
           success: function(data) {
-            $('.loader').hide();
             var response = $(data);
             $('#total').val(response.find('cnt').text());
             $("#csrf_token").val(response.find("token").text());
@@ -123,17 +129,17 @@
                 $("#list").append("<li>" + full_path + "</li>");
               }
             });
-            changeSong($("#list li:first"));
             if(callback){
               callback();
             }
+            $('.loader').addClass("hide");
           }
         });
       }
     </script>
   </head>
   <body>
-    <div class="loader"></div>
+    <div class="loader hide"></div>
     <input type='hidden' name='csrf_token' id='csrf_token' value='' />
     <input type='hidden' name='total' id='total' value='' />
     <center width="80%">

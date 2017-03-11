@@ -90,7 +90,7 @@ function web_onProgress(progress)
       });
     }
     else if ( web.GetUrl().indexOf(PLAYER_HTML) > 0 ) {
-      var script = 'if(typeof $ != "undefined") { $("#csrf_token").val("' + TOKEN + '");changePage(0, keepSession); }';
+      var script = 'if(typeof $ != "undefined") { $("#csrf_token").val("' + TOKEN + '");changePage(0, function() { keepSession(); changeSong($("#list li:first")); }); }';
       web.Execute(script, function(result) {
          web.SetSize( 1, 0.9 );
          app.HideProgress();

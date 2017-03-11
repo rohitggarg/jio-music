@@ -1,0 +1,145 @@
+<html>
+  <head>
+    <style>
+      body {
+        background-color: #030303;
+        color: white;
+      }
+      .loader {
+        position:absolute;
+        display: none;
+        border: 3px solid #f3f3f3; /* Light grey */
+        border-top: 3px solid #7090F0; /* Blue */
+        border-radius: 50%;
+        margin:55% auto auto 40%;
+        width: 3em;
+        height: 3em;
+        animation: spin 2s linear infinite;
+      }
+
+      @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+      }
+      .playlist {
+        overflow:scroll;
+        height:75%;
+        font-size: 12px;
+      }
+      li.current {
+        color: #7090F0;
+      }
+      table.nav {
+        font-size: 2em;
+        width: 100%;
+      }
+      table.nav td {
+        text-align: center;
+      }
+    </style>
+    <script src="http://jiofi.local.html/jquery-1.4.1.min.js"></script>
+    <script src="http://jiofi.local.html/jquery-1.4.1.min.js"></script>
+    <script>
+      $(document).ready(function() {
+        keepSession();
+        $('#list li').live('click', function() {
+            changeSong($(this));
+        });
+      });
+      function keepSession() {
+        $.get('http://jiofi.local.html/img/up.gif');
+        setTimeout(keepSession, 10000);
+      }
+      function prevPage() {
+        var page = parseInt($("#pagenum").text()) - 1;
+        if (page > 0) {
+          changePage(page - 1);
+        }
+      }
+      function nextPage() {
+        var page = parseInt($("#pagenum").text()) - 1;
+        var maxPageIndex = parseInt($('#total').val()) / 100.0;
+        if (page < maxPageIndex - 1) {
+          changePage(page + 1);
+        }
+      }
+      function prev() {
+        var prev = $('#list li.current').prev();
+        if(!prev.html()) {
+          prev = $('#list li:last');
+        }
+        changeSong(prev);
+      }
+      function next() {
+        var next = $('#list li.current').next();
+        if(!next.html()) {
+          next = $('#list li:first');
+        }
+        changeSong(next);
+      }
+      function changeSong(el) { 
+        $('#list li.current').removeClass('current');
+        el.addClass('current');
+        var song = el.html();
+        $('#ticker').html(song);
+        $('#player').attr('src', 'http://jiofi.local.html/sd' + encodeURIComponent(song));
+      }
+
+      function changePage(curr_page) {
+        $('.loader').show();
+        var headers={};
+        if(curr_page == (parseInt($("#pagenum").text()) - 1) ) {
+          return;
+        }
+        $("#pagenum").text(curr_page + 1);
+        headers["__RequestVerificationToken"]=$("#csrf_token").val();
+        $.ajax({
+          url: "http://jiofi.local.html/wxml/sd_show_curr.xml",
+          type: "Post",
+          headers: headers,
+          datatype: "xml",
+          data: { path:'/', page: curr_page, filter:'2' },
+          success: function(data) {
+            $('.loader').hide();
+            var response = $(data);
+            $('#total').val(response.find('cnt').text());
+            $("#csrf_token").val(response.find("token").text());
+            $("#list").empty();
+            $(response).find("file").each(function(){
+              if($(this).children("succ").text()=="1"){
+                var path = $(this).children("path").text();
+                var name=$(this).children("name").text();
+                var size=parseInt($(this).children("size").text());
+                var full_path= path + name;
+                $("#list").append("<li>" + full_path + "</li>");
+              }
+            });
+            changeSong($("#list li:first"));
+          }
+        });
+      }
+    </script>
+  </head>
+  <body>
+    <div class="loader"></div>
+    <input type='hidden' name='csrf_token' id='csrf_token' value='' />
+    <input type='hidden' name='total' id='total' value='' />
+    <center width="80%">
+      <div><marquee id='ticker'></marquee></div>
+      <audio controls autoplay src='' id='player' onended='next()'></audio>
+    </center>
+    <div class='playlist'>
+      <ul id='list'>
+      </ul>
+    </div>
+    <center>
+      <table border='0' class='nav'>
+        <td onclick='prevPage()'>&lt;&lt;</td>
+        <td onclick='prev()'>&lt;</td>
+        <td id='pagenum'></td>
+        <td onclick='next()'>&gt;</td>
+        <td onclick='nextPage()'>&gt;&gt;</td>
+      </table>
+    </center>
+  <body>
+</html>

@@ -38,17 +38,27 @@
       }
     </style>
     <script src="http://jiofi.local.html/jquery-1.4.1.min.js"></script>
-    <script src="http://jiofi.local.html/jquery-1.4.1.min.js"></script>
     <script>
       $(document).ready(function() {
-        keepSession();
         $('#list li').live('click', function() {
             changeSong($(this));
         });
       });
       function keepSession() {
-        $.get('http://jiofi.local.html/img/up.gif');
-        setTimeout(keepSession, 10000);
+        var headers = {"__RequestVerificationToken": $("#csrf_token").val()};
+        $.ajax({
+          url: "http://jiofi.local.html/wxml/sd_show_curr.xml",
+          type: "Post",
+          headers: headers,
+          datatype: "xml",
+          data: { path:'/', page: 9999, filter:'2' },
+          success: function(data) {
+            var response = $(data);
+            $('#total').val(response.find('cnt').text());
+            $("#csrf_token").val(response.find("token").text());
+            setTimeout(keepSession, 30000);
+          }
+        });
       }
       function prevPage() {
         var page = parseInt($("#pagenum").text()) - 1;
@@ -85,14 +95,13 @@
         $('#player').attr('src', 'http://jiofi.local.html/sd' + encodeURIComponent(song));
       }
 
-      function changePage(curr_page) {
+      function changePage(curr_page, callback) {
         $('.loader').show();
-        var headers={};
         if(curr_page == (parseInt($("#pagenum").text()) - 1) ) {
           return;
         }
         $("#pagenum").text(curr_page + 1);
-        headers["__RequestVerificationToken"]=$("#csrf_token").val();
+        var headers = {"__RequestVerificationToken": $("#csrf_token").val()};
         $.ajax({
           url: "http://jiofi.local.html/wxml/sd_show_curr.xml",
           type: "Post",
@@ -115,6 +124,9 @@
               }
             });
             changeSong($("#list li:first"));
+            if(callback){
+              callback();
+            }
           }
         });
       }

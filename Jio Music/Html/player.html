@@ -18,18 +18,9 @@
       .hide {
         display: none;
       }
-
       @keyframes spin {
         0% { transform: rotate(0deg); }
         100% { transform: rotate(360deg); }
-      }
-      .playlist {
-        overflow:scroll;
-        height:75%;
-        font-size: 12px;
-      }
-      li.current {
-        color: #7090F0;
       }
       table.nav {
         font-size: 2em;
@@ -38,15 +29,66 @@
       table.nav td {
         text-align: center;
       }
+      table.nav td:active {
+        color: #7090F0;
+      }
+      .playlist {
+        overflow-y:scroll;
+        overflow-x:hidden;
+        width: 90%;
+        height:72%;
+        margin: 1em 0;
+        font-size: 12px;
+        text-align: left;
+      }
+      #list {
+        margin: 0;
+        padding: 0;
+        list-style: none;
+      }
+      #list li.current {
+        color: #7090F0;
+      }
+      #list li {
+        color: white;
+        transition-property: color;
+      transition-duration: 0.5s;
+        margin: 0.5em 0;
+      }
     </style>
     <script src="http://jiofi.local.html/jquery-1.4.1.min.js"></script>
     <script>
+      loading = false;
       $(document).ready(function() {
         $('#list li').live('click', function() {
             changeSong($(this));
         });
+        $("#pagenum").click(function() {
+            $("#pager tr").html("");
+            var currPage = parseInt($("#pagenum").text());
+            var index = 2;
+            if((currPage - index) <= 0) {
+                currPage = index+1;
+            } else if((currPage + index) >= pages()) {
+                currPage = pages() - index;
+            }
+            for(var i=currPage - index; i <= currPage + index; i++) {
+                $("#pager tr").append("<td>" +(i)+ "</td>");
+            }
+            $("#pager").removeClass("hide");
+            $("#mover").addClass("hide");
+        });
+        $("#pager tr td").live('click', function() {
+            $("#mover").removeClass("hide");
+            $("#pager").addClass("hide");
+            changePage(parseInt($(this).text()) - 1);
+        });
       });
       function keepSession() {
+        if(loading) {
+          return;
+        }
+        loading = true;
         var headers = {"__RequestVerificationToken": $("#csrf_token").val()};
         $.ajax({
           url: "http://jiofi.local.html/wxml/sd_show_curr.xml",
@@ -58,6 +100,7 @@
             var response = $(data);
             $('#total').val(response.find('cnt').text());
             $("#csrf_token").val(response.find("token").text());
+            loading = false;
             setTimeout(keepSession, 30000);
           }
         });
@@ -70,8 +113,7 @@
       }
       function nextPage() {
         var page = parseInt($("#pagenum").text()) - 1;
-        var maxPageIndex = parseInt($('#total').val()) / 100.0;
-        if (page < maxPageIndex - 1) {
+        if (page < pages() - 1) {
           changePage(page + 1, markCurrentPlaying);
         }
       }
@@ -102,10 +144,10 @@
       }
 
       function changePage(curr_page, callback) {
-        var loading = $('.loader.hide').length == 0;
-        if(loading) {
+        if(loading || parseInt($("#pagenum").text()) == curr_page + 1) {
           return;
         }
+        loading = true;
         $('.loader').removeClass("hide");
         $("#pagenum").text(curr_page + 1);
         var headers = {"__RequestVerificationToken": $("#csrf_token").val()};
@@ -119,6 +161,7 @@
             var response = $(data);
             $('#total').val(response.find('cnt').text());
             $("#csrf_token").val(response.find("token").text());
+            loading = false;
             $("#list").empty();
             $(response).find("file").each(function(){
               if($(this).children("succ").text()=="1"){
@@ -126,7 +169,7 @@
                 var name=$(this).children("name").text();
                 var size=parseInt($(this).children("size").text());
                 var full_path= path + name;
-                $("#list").append("<li>" + full_path + "</li>");
+                $("#list").append("<li>" + full_path.replace(/%20/g, ' ') + "</li>");
               }
             });
             if(callback){
@@ -136,27 +179,41 @@
           }
         });
       }
+      
+      function pages() {
+          var total = parseInt($("#total").val());
+          var pages = Math.ceil(total / 100.0);
+          return pages;
+      }
     </script>
   </head>
   <body>
     <div class="loader hide"></div>
     <input type='hidden' name='csrf_token' id='csrf_token' value='' />
     <input type='hidden' name='total' id='total' value='' />
-    <center width="80%">
+    <center>
       <div><marquee id='ticker'></marquee></div>
       <audio controls autoplay src='' id='player' onended='next()'></audio>
     </center>
-    <div class='playlist'>
-      <ul id='list'>
-      </ul>
-    </div>
     <center>
-      <table border='0' class='nav'>
-        <td onclick='prevPage()'>&lt;&lt;</td>
-        <td onclick='prev()'>&lt;</td>
-        <td id='pagenum'></td>
-        <td onclick='next()'>&gt;</td>
-        <td onclick='nextPage()'>&gt;&gt;</td>
+      <div class='playlist'>
+        <ul id='list'>
+        </ul>
+      </div>
+    </center>
+    <center>
+      <table border='0' class="nav" id="mover">
+        <tr>
+          <td onclick='prevPage()'>&lt;&lt;</td>
+          <td onclick='prev()'>&lt;</td>
+          <td id='pagenum'></td>
+          <td onclick='next()'>&gt;</td>
+          <td onclick='nextPage()'>&gt;&gt;</td>
+        </tr>
+      </table>
+      <table border='0' class="nav hide" id="pager">
+        <tr>
+        </tr>
       </table>
     </center>
   <body>

@@ -1,4 +1,5 @@
 HOME_URL="http://jiofi.local.html/msd.html";
+LOGIN_URL="http://jiofi.local.html/sd_login.html";
 CRED_NAME  = "credentials";
 TOKEN = '';
 redirect_check = true;
@@ -6,7 +7,8 @@ PLAYER_HTML="Html/player.html";
 //Called when application is started.
 function OnStart()
 {
-  lay = app.CreateLayout( "Linear", "FillXY" );
+    lay = app.CreateLayout( "Linear", "FillXY" );
+    
     credentials = {};
     title = app.CreateText("Jio Music App", 1, 0.1);
     title.SetTextSize(30);
@@ -21,7 +23,7 @@ function OnStart()
     } else {
         proceedLogin();
     }    
-  app.AddLayout( lay );
+    app.AddLayout( lay );
 }
 
 function checkPlayerLoaded() {
@@ -60,10 +62,10 @@ function btn_loginTouch() {
 
 function proceedLogin() {
     app.ShowProgress( "Loading..." );
-    setTimeout(checkPlayerLoaded, 5000);
+    setTimeout(checkPlayerLoaded, 10000);
     credentials = JSON.parse(app.LoadText(CRED_NAME));
     lay.AddChild( web );
-    web.LoadUrl( HOME_URL );
+    web.LoadUrl( LOGIN_URL );
 }
 
 function web_onProgress(progress)
@@ -73,7 +75,7 @@ function web_onProgress(progress)
   }
   if(progress == 100 && redirect_check == false) {
     redirect_check = true;
-    if( web.GetUrl() == "http://jiofi.local.html/sd_login.html" ) {
+    if( web.GetUrl() == LOGIN_URL ) {
       web.Execute( 'if (typeof $ != "undefined") {'+
           '$("document").ready(function() {'+
             '$("#LOGIN_USER").val("'+credentials.user+'");'+

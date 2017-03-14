@@ -173,7 +173,7 @@
               }
             });
             if(callback){
-              callback();
+              callback($("#csrf_token").val());
             }
             $('.loader').addClass("hide");
           }

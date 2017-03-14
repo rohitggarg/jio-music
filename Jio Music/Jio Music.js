@@ -65,7 +65,7 @@ function proceedLogin() {
     setTimeout(checkPlayerLoaded, 10000);
     credentials = JSON.parse(app.LoadText(CRED_NAME));
     lay.AddChild( web );
-    web.LoadUrl( LOGIN_URL );
+    web.LoadUrl( HOME_URL );
 }
 
 function web_onProgress(progress)
@@ -75,27 +75,34 @@ function web_onProgress(progress)
   }
   if(progress == 100 && redirect_check == false) {
     redirect_check = true;
-    if( web.GetUrl() == LOGIN_URL ) {
-      web.Execute( 'if (typeof $ != "undefined") {'+
-          '$("document").ready(function() {'+
+    var url = web.GetUrl()
+    if( url == LOGIN_URL ) {
+      web.Execute( '$("document").ready(function() {'+
             '$("#LOGIN_USER").val("'+credentials.user+'");'+
             '$("#LOGIN_PWD").val("'+credentials.pass+'");'+
             '$("#BTN_Login").click();'+
-          '})'+
-        '}');
+          '})');
     }
     else if ( web.GetUrl() == HOME_URL) {
-      var script = 'document.getElementById("csrf_token").value';
+      var script = '$("#csrf_token").val()';
       web.Execute(script, function(csrf_token) {
-         TOKEN = csrf_token;
-         web.LoadUrl( PLAYER_HTML );
+        TOKEN = csrf_token;
+        web.LoadUrl( PLAYER_HTML );
       });
     }
-    else if ( web.GetUrl().indexOf(PLAYER_HTML) > 0 ) {
-      var script = 'if(typeof $ != "undefined") { $("#csrf_token").val("' + TOKEN + '");changePage(0, function() { keepSession(); changeSong($("#list li:first")); }); }';
+    else if ( url.indexOf(PLAYER_HTML) > 0 ) {
+      var script = '$("#csrf_token").val("' + TOKEN + '");'+
+                'changePage(0, function(res) {'+
+                  'if(res != -1) {'+
+                    'keepSession();'+
+                    'changeSong($("#list li:first"));'+
+                  '} else {'+
+                    'top.location.href = "'+HOME_URL+'";'+
+                  '}'+
+                '});';
       web.Execute(script, function(result) {
-         web.SetSize( 1, 0.9 );
-         app.HideProgress();
+        web.SetSize( 1, 0.9 );
+        app.HideProgress();
       });
     }
   }

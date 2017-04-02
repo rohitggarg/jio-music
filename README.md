@@ -11,6 +11,16 @@ Installation
 * Install DroidScript app from play store
 * Clone this repository and place the 'Jio Music' folder at /sdcard/DroidScript/ (this was folder in my phone, you might have to search for it in your device)
 
-You should automatically see the application in DroidScript, you can expose the app outside DroidScript for quick access also.
+You should automatically see the application in DroidScript app, you can expose the app outside DroidScript for quick access also.
 
 This application is only on android platform because DroidScript is only supported on Android. There is definitely scope for it to be ported to iOS using cordova
+
+Why would you do that?
+===
+I have a personal collection that I maintain and listen to them when I am home mostly. I bought a phone that doesn't support micro SD card and dual sim together, it doesn't have too much internal memory as well. So I thought about using JioFi device as a drive where I can put all my music files and provide an interface in my phone to play them like I would using a regular music player
+
+Possible Additions
+===
+* Custom Playlist feature
+* Shuffle
+* Porting to phonegap/cordova

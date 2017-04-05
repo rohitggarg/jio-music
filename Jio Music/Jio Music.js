@@ -90,7 +90,12 @@ function web_pageLoaded(progress) {
 function web_playerLoaded(progress) {
     if(web_pageLoaded(progress)) {
         web._loadingHtml = false;
-        var script = 'window.$("#csrf_token").val("' + web.TOKEN + '");'+
+        if( web.GetUrl() == HOME_URL ) {
+            web.Execute( '$("#csrf_token").val();', function(res) { web.TOKEN = res } );
+            web.LoadUrl( PLAYER_HTML );
+            return;
+        }
+        var script = '$("#csrf_token").val("' + web.TOKEN + '");'+
                 'changePage(0, function(res) {'+
                   'if(res != -1) {'+
                     'keepSession();'+
@@ -99,7 +104,7 @@ function web_playerLoaded(progress) {
                     'top.location.href = "'+HOME_URL+'";'+
                   '}'+
                 '});';
-        web.Execute(script, function(result) {
+        web.Execute(script, function() {
             web.SetSize( 1, 0.9 );
             app.HideProgress();
         });

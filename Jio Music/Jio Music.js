@@ -31,11 +31,9 @@ function OnStart()
     app.AddLayout( lay );
 }
 
-function checkPlayerLoaded() {
-    if(web.GetUrl().indexOf(PLAYER_HTML) < 0) {
-        showLoginScreen();
-        app.HideProgress();
-    }
+function playerNotLoaded() {
+    showLoginScreen();
+    app.HideProgress();
 }
 
 function showLoginScreen() {
@@ -69,7 +67,7 @@ function web_firePlayerLoading(progress)
     if(web_pageLoaded(progress)) {
         web._loadingHtml = false;
         web.Execute("if( typeof $ != 'undefined') { $('#csrf_token').val(); } else { null; }", function(token_guess) {
-            if (token_guess == null) { setTimeout(checkPlayerLoaded, 10000); return; }
+            if (token_guess == null) { playerNotLoaded(); return; }
             var url = web.GetUrl();
             if ( web_homeLoaded( url ) ) {
                 web.TOKEN = token_guess;

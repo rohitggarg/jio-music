@@ -27,13 +27,8 @@ function OnStart()
     } else {
         subTitle = app.CreateText("There seems to be a problem loading the page, you can try to relogin here", 0.8, 0.1, "Multiline");
         proceedLogin();
-    }    
+    }
     app.AddLayout( lay );
-}
-
-function playerNotLoaded() {
-    showLoginScreen();
-    app.HideProgress();
 }
 
 function showLoginScreen() {
@@ -43,6 +38,13 @@ function showLoginScreen() {
     lay.AddChild(login);
 }
 
+function proceedLogin() {
+    app.ShowProgress( "Loading..." );
+    lay.AddChild( web );
+    web.LoadUrl( LOGIN_URL );
+}
+
+//callbacks start
 function btn_loginTouch() {
     if(username.GetText().trim() == '' || password.GetText().trim() == '') {
         subTitle.SetText('Credentials are empty');
@@ -56,20 +58,13 @@ function btn_loginTouch() {
     proceedLogin();
 }
 
-function proceedLogin() {
-    app.ShowProgress( "Loading..." );
-    lay.AddChild( web );
-    web.LoadUrl( HOME_URL );
-}
-
 function web_firePlayerLoading(progress)
 {
-    if(web_pageLoaded(progress)) {
-        web._loadingHtml = false;
+    if(pageLoaded(progress)) {
         web.Execute("if( typeof $ != 'undefined') { $('#csrf_token').val(); } else { null; }", function(token_guess) {
             if (token_guess == null) { playerNotLoaded(); return; }
             var url = web.GetUrl();
-            if ( web_homeLoaded( url ) ) {
+            if ( homeLoaded( url ) ) {
                 web.TOKEN = token_guess;
                 web.SetOnProgress( web_playerLoaded );
                 web.LoadUrl( PLAYER_HTML );
@@ -78,15 +73,8 @@ function web_firePlayerLoading(progress)
     }
 }
 
-function web_pageLoaded(progress) {
-    if (progress != 10 && progress != 100) {
-        web._loadingHtml = true;
-    }
-    return web._loadingHtml && (progress == 100);
-}
-
 function web_playerLoaded(progress) {
-    if(web_pageLoaded(progress)) {
+    if(pageLoaded(progress)) {
         web._loadingHtml = false;
         if( web.GetUrl() == HOME_URL ) {
             web.Execute( '$("#csrf_token").val();', function(res) { web.TOKEN = res } );
@@ -108,8 +96,16 @@ function web_playerLoaded(progress) {
         });
     }
 }
+//callbacks end
 
-function web_homeLoaded(url) {
+function pageLoaded(progress) {
+    if (progress != 10 && progress != 100) {
+        web._loadingHtml = true;
+    }
+    return web._loadingHtml && (progress == 100) && !(web._loadingHtml = false);
+}
+
+function homeLoaded(url) {
     if( url == LOGIN_URL ) {
         var credentials = JSON.parse(app.LoadText(CRED_NAME));
         web.Execute( '$(document).ready(function() {'+
@@ -117,6 +113,20 @@ function web_homeLoaded(url) {
             '$("#LOGIN_PWD").val("'+credentials.pass+'");'+
             '$("#BTN_Login").click();'+
           '})');
+        checkForPlayerLoadedIn(10);
     }
     return url == HOME_URL;
+}
+
+function checkForPlayerLoadedIn(timeSeconds) {
+    setTimeout(function() {
+        if (web.GetUrl().indexOf(PLAYER_HTML) < 0) {
+            playerNotLoaded();
+        }
+    }, timeSeconds * 1000);
+}
+
+function playerNotLoaded() {
+    showLoginScreen();
+    app.HideProgress();
 }
